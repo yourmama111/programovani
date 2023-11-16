@@ -1,0 +1,10 @@
+function setup() {
+    createCanvas(400, 400);
+
+    var lineCount = 10;
+    var w = width / lineCount;
+
+    for (var i = 0; i <= lineCount; i++) {
+        line(0, w*i, w*i, height);
+    }
+}

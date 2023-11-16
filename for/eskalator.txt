@@ -1,0 +1,23 @@
+var offset = 0;
+
+var stairCount = 10;
+var w;
+
+function setup() {
+    createCanvas(400, 400);
+    
+    w = width / stairCount;
+}
+
+function draw() {
+    background(220);
+
+    for (var i = -1; i < stairCount; i++) {
+        var p = w*i + offset;
+
+        line(p, p, p + w, p);
+        line(p + w, p, p + w, p + w);
+    }
+
+    offset = (offset + 1) % w; // '%' znamená zbytek po dělení - tady je to takový programátorský trik
+}

@@ -1,0 +1,11 @@
+function setup() {
+    createCanvas(400, 400);
+
+    var stairCount = 10;
+    var w = width / stairCount;
+
+    for (var i = 0; i < stairCount; i++) {
+        line(w*i, w*i, w*i + w, w*i);
+        line(w*i + w, w*i, w*i + w, w*i + w);
+    }
+}

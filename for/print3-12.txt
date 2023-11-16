@@ -1,0 +1,10 @@
+function setup() {
+    for (var i = 3; i < 13; i++) {
+        print(i);
+    }
+
+    // nebo
+    for (var i = 0; i <= 12; i++) {
+        print(i);
+    }
+}
