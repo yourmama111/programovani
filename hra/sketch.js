@@ -5,20 +5,18 @@ const enemySize = 30;
 
 var player;
 
-var enemy;
+var enemies = [];
 
 function setup() {
     createCanvas(800, 600);
 
     player = createVector(width / 2, height / 2);
     
-    // Tomuhle nemusíte rozumět, je to jenom aby byl nepřítel
-    // na náhodné pozici, ale vždycky stejně daleko od hráče
-    const r = min(width, height)/2 * 0.75;
-    const a = random(2*PI);
-    enemy = createVector(r*cos(a), r*sin(a));
-    enemy.add(player);
-    //
+    for (var i = 0; i < 10; i++) {
+        var randomPos = createVector(random(width), random(height));
+        var enemy = new Enemy(randomPos);
+        enemies.push(enemy);
+    }
 }
 
 function draw() {
@@ -32,9 +30,17 @@ function draw() {
     dir.setMag(playerSpeed);
     player.add(dir);
 
+    if (player.x > width) player.x = 0;
+    if (player.x < 0) player.x = width;
+    if (player.y > height) player.y = 0;
+    if (player.y < 0) player.y = height;
+
+    for (var enemy of enemies)
+        enemy.update();
+
     fill(255);
     circle(player.x, player.y, playerSize);
 
-    fill(255, 0, 0);
-    circle(enemy.x, enemy.y, enemySize);
+    for (var enemy of enemies)
+        enemy.draw();
 }
