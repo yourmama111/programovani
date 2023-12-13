@@ -6,13 +6,12 @@ const enemySize = 30;
 var player;
 
 var enemies = [];
-var bullets = [];
 
 function setup() {
     createCanvas(800, 600);
 
     player = createVector(width / 2, height / 2);
-
+    
     for (var i = 0; i < 10; i++) {
         var randomPos = createVector(random(width), random(height));
         var enemy = new Enemy(randomPos);
@@ -39,19 +38,9 @@ function draw() {
     for (var enemy of enemies)
         enemy.update();
 
-    for (var bullet of bullets)
-        bullet.update();
-
     fill(255);
     circle(player.x, player.y, playerSize);
 
     for (var enemy of enemies)
         enemy.draw();
-
-    for (var bullet of bullets)
-        bullet.draw();
-}
-
-function mousePressed() {
-    bullets.push(new Bullet(player));
 }
