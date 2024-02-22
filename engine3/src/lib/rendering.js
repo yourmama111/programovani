@@ -3,15 +3,23 @@ class Renderer {
     static renderers = [];
     static render() {
         for (const renderer of Renderer.renderers) {
-            renderer.draw();
+            renderer.render();
         }
         Draw.settings.transform.clear();
     }
 }
 class RendererComponent extends Component {
-    constructor() {
+    settings;
+    constructor(drawSettings = () => fill(255)) {
         super();
         Renderer.renderers.push(this);
+        this.settings = drawSettings;
+    }
+    render() {
+        push();
+        this.settings();
+        this.draw();
+        pop();
     }
     destroy() {
         Renderer.renderers.splice(Renderer.renderers.indexOf(this), 1);
@@ -19,16 +27,11 @@ class RendererComponent extends Component {
 }
 class RectRenderer extends RendererComponent {
     size;
-    settings;
     constructor(w, h, drawSettings = () => fill(255)) {
-        super();
+        super(drawSettings);
         this.size = createVector(w, h);
-        this.settings = drawSettings;
     }
     draw() {
-        push();
-        this.settings();
         rect(this.gameObject.pos.x - this.size.x / 2, this.gameObject.pos.y - this.size.y / 2, this.size.x, this.size.y);
-        pop();
     }
 }

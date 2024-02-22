@@ -3,13 +3,14 @@ declare class Renderer {
     static render(): void;
 }
 declare abstract class RendererComponent extends Component {
-    constructor();
+    settings: () => void;
+    constructor(drawSettings?: () => void);
     abstract draw(): void;
+    render(): void;
     destroy(): void;
 }
 declare class RectRenderer extends RendererComponent {
     size: Vector;
-    settings: () => void;
     constructor(w: number, h: number, drawSettings?: () => void);
     draw(): void;
 }
