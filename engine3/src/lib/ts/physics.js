@@ -28,6 +28,8 @@ class CollisionManifold {
         let impulseB = Vector.mult(impulse, this.rigiB.invMass);
         this.rigiA.vel.add(impulseA);
         this.rigiB.vel.add(impulseB);
+        this.rigiA.currentCollisions.set(this.rigiB, new Collision(this.rigiB, this.normal, this.depth));
+        this.rigiB.currentCollisions.set(this.rigiA, new Collision(this.rigiA, Vector.mult(this.normal, -1), this.depth));
     }
     positionalCorrection() {
         let correctionPercentage = 0.2;
@@ -41,6 +43,16 @@ class CollisionManifold {
             this.rigiB.gameObject.pos.add(rigiBCorrection);
     }
 }
+class Collision {
+    collider;
+    normal;
+    depth;
+    constructor(collider, normal, depth) {
+        this.collider = collider;
+        this.normal = normal;
+        this.depth = depth;
+    }
+}
 class Rigidbody extends Component {
     vel = new Vector();
     forceAccumulator = new Vector();
@@ -50,6 +62,8 @@ class Rigidbody extends Component {
     bounciness = 0;
     isKinematic = false;
     shape;
+    collisions = new Map();
+    currentCollisions = new Map();
     constructor(mass = 1, bounciness = 0) {
         super();
         this.mass = mass;
@@ -78,6 +92,30 @@ class Rigidbody extends Component {
         this.gameObject.pos.add(Vector.mult(this.vel, deltaTime));
         this.vel.mult(0.9999);
         this.forceAccumulator.mult(0);
+        this.processCollisions();
+    }
+    processCollisions() {
+        // onCollisionEnter events
+        for (const [key, val] of this.currentCollisions) {
+            if (!this.collisions.has(key)) {
+                this.collisions.set(key, val);
+                this.gameObject.onCollisionEnter(val);
+            }
+        }
+        // onCollisionExit events
+        let toRemove = [];
+        for (const [key, val] of this.collisions) {
+            if (!this.currentCollisions.has(key)) {
+                toRemove.push(key);
+                this.gameObject.onCollisionExit(val);
+            }
+        }
+        // Removing exitted collisions
+        for (const key of toRemove) {
+            this.collisions.delete(key);
+        }
+        // Clearing current collisions
+        this.currentCollisions.clear();
     }
     applyForce(...args) {
         this.forceAccumulator.add(...args);
@@ -88,8 +126,6 @@ class Rigidbody extends Component {
 }
 class PhysicsComponent extends Component {
     collisions = [];
-    onCollisionEnter = () => { };
-    onCollisionExit = () => { };
     constructor() {
         super();
         Physics.physicsComponents.push(this);
@@ -145,18 +181,18 @@ class DynamicBoxCollider extends BoxCollider {
             if (hit) {
                 this.vel.add(Vector.mult(hit.normal, createVector(Math.abs(this.vel.x), Math.abs(this.vel.y)).mult(1 - hit.t)));
                 if (!this.collisions.find(col => col.collider == collision.collider)) {
-                    if (this.onCollisionEnter)
-                        this.onCollisionEnter(collision);
+                    // if (this.onCollisionEnter)
+                    //     this.onCollisionEnter(collision);
                     this.collisions.push(collision);
                 }
             }
         }
-        // Call collision events
+        // Call collision exit events
         for (let i = this.collisions.length - 1; i >= 0; i--) {
             const collision = this.collisions[i];
             if (!collisions.find(col => col.collider == collision.collider)) {
-                if (this.onCollisionExit)
-                    this.onCollisionExit(collision);
+                // if (this.onCollisionExit)
+                //     this.onCollisionExit(collision);
                 this.collisions.splice(i, 1);
             }
         }
@@ -185,6 +221,8 @@ class Physics {
     static update(deltaTime) {
         for (const rigiA of this.bodies) {
             for (const rigiB of this.bodies) {
+                if (rigiA == rigiB)
+                    continue;
                 let col = this.checkCollision(rigiA, rigiB);
                 if (!col)
                     continue;

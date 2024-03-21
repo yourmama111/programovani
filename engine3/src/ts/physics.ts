@@ -46,6 +46,9 @@ class CollisionManifold {
 
         this.rigiA.vel.add(impulseA);
         this.rigiB.vel.add(impulseB);
+
+        this.rigiA.currentCollisions.set(this.rigiB, new Collision(this.rigiB, this.normal, this.depth));
+        this.rigiB.currentCollisions.set(this.rigiA, new Collision(this.rigiA, Vector.mult(this.normal, -1), this.depth));
     }
 
     positionalCorrection() {
@@ -61,6 +64,18 @@ class CollisionManifold {
     }
 }
 
+class Collision {
+    readonly collider: Rigidbody;
+    readonly normal: Vector;
+    readonly depth: number;
+
+    constructor(collider: Rigidbody, normal: Vector, depth: number) {
+        this.collider = collider;
+        this.normal = normal;
+        this.depth = depth;
+    }
+}
+
 class Rigidbody extends Component {
 
     vel: Vector = new Vector();
@@ -72,6 +87,9 @@ class Rigidbody extends Component {
 
     readonly isKinematic: boolean = false;
     shape!: Shape;
+
+    private readonly collisions: Map<Rigidbody, Collision> = new Map();
+    readonly currentCollisions: Map<Rigidbody, Collision> = new Map();
 
     constructor(mass: number = 1, bounciness: number = 0) {
         super();
@@ -105,6 +123,35 @@ class Rigidbody extends Component {
 
         this.vel.mult(0.9999);
         this.forceAccumulator.mult(0);
+
+        this.processCollisions();
+    }
+
+    private processCollisions() {
+        // onCollisionEnter events
+        for (const [key, val] of this.currentCollisions) {
+            if (!this.collisions.has(key)) {
+                this.collisions.set(key, val);
+                this.gameObject.onCollisionEnter(val);
+            }
+        }
+
+        // onCollisionExit events
+        let toRemove: Array<Rigidbody> = [];
+        for (const [key, val] of this.collisions) {
+            if (!this.currentCollisions.has(key)) {
+                toRemove.push(key);
+                this.gameObject.onCollisionExit(val);
+            }
+        }
+
+        // Removing exitted collisions
+        for (const key of toRemove) {
+            this.collisions.delete(key);
+        }
+
+        // Clearing current collisions
+        this.currentCollisions.clear();
     }
 
     applyForce(...args: [x: number, y: number] | [v: Vector]) {
@@ -119,8 +166,6 @@ class Rigidbody extends Component {
 abstract class PhysicsComponent extends Component {
 
     collisions: Array<BoxCollision> = [];
-    onCollisionEnter: (collision: BoxCollision) => void = () => {};
-    onCollisionExit: (collision: BoxCollision) => void = () => {};
 
     constructor() {
         super();
@@ -196,19 +241,19 @@ class DynamicBoxCollider extends BoxCollider {
             if (hit) {
                 this.vel.add(Vector.mult(hit.normal, createVector(Math.abs(this.vel.x), Math.abs(this.vel.y)).mult(1 - hit.t)));
                 if (!this.collisions.find(col => col.collider == collision.collider)) {
-                    if (this.onCollisionEnter)
-                        this.onCollisionEnter(collision);
+                    // if (this.onCollisionEnter)
+                    //     this.onCollisionEnter(collision);
                     this.collisions.push(collision);
                 }
             }
         }
 
-        // Call collision events
+        // Call collision exit events
         for (let i = this.collisions.length - 1; i >= 0; i--) {
             const collision = this.collisions[i];
             if (!collisions.find(col => col.collider == collision.collider)) {
-                if (this.onCollisionExit)
-                    this.onCollisionExit(collision);
+                // if (this.onCollisionExit)
+                //     this.onCollisionExit(collision);
                 this.collisions.splice(i, 1);
             }
         }
@@ -244,6 +289,7 @@ class Physics {
 
         for (const rigiA of this.bodies) {
             for (const rigiB of this.bodies) {
+                if (rigiA == rigiB) continue;
                 let col = this.checkCollision(rigiA, rigiB);
                 if (!col) continue;
                 

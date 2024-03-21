@@ -108,6 +108,18 @@ class GameObject {
         }
     }
 
+    onCollisionEnter(col: Collision) {
+        for (const component of this.components) {
+            component.onCollisionEnter(col);
+        }
+    }
+
+    onCollisionExit(col: Collision) {
+        for (const component of this.components) {
+            component.onCollisionExit(col);
+        }
+    }
+
     addComponent(component: Component) {
         this.components.push(component);
         component.gameObject = this;
@@ -142,4 +154,6 @@ abstract class Component {
     start() {}
     update() {}
     destroy() {}
+    onCollisionEnter(col: Collision) {}
+    onCollisionExit(col: Collision) {}
 }

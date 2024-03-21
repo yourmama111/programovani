@@ -83,6 +83,16 @@ class GameObject {
                 component.update();
         }
     }
+    onCollisionEnter(col) {
+        for (const component of this.components) {
+            component.onCollisionEnter(col);
+        }
+    }
+    onCollisionExit(col) {
+        for (const component of this.components) {
+            component.onCollisionExit(col);
+        }
+    }
     addComponent(component) {
         this.components.push(component);
         component.gameObject = this;
@@ -110,4 +120,6 @@ class Component {
     start() { }
     update() { }
     destroy() { }
+    onCollisionEnter(col) { }
+    onCollisionExit(col) { }
 }
