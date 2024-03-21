@@ -117,7 +117,7 @@ class DynamicBoxCollider extends BoxCollider {
     }
     update() {
         if (this.applyGravity)
-            this.applyForce(Physics.gravity);
+            this.applyForce(Vector.mult(Physics.gravity, 1 / 60));
         this.resolveCollisions();
         this.gameObject.pos.add(Vector.mult(this.vel, deltaTime));
     }
@@ -179,7 +179,7 @@ class DynamicBoxCollider extends BoxCollider {
     }
 }
 class Physics {
-    static gravity = createVector(0, 30);
+    static gravity = createVector(0, 1800);
     static bodies = [];
     static physicsComponents = [];
     static update(deltaTime) {

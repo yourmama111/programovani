@@ -161,7 +161,7 @@ class DynamicBoxCollider extends BoxCollider {
 
     update() {
         if (this.applyGravity)
-            this.applyForce(Physics.gravity);
+            this.applyForce(Vector.mult(Physics.gravity, 1/60));
 
         this.resolveCollisions();
         
@@ -236,7 +236,7 @@ class DynamicBoxCollider extends BoxCollider {
 
 class Physics {
 
-    static gravity: Vector = createVector(0, 30);
+    static gravity: Vector = createVector(0, 1800);
     static readonly bodies: Array<Rigidbody> = [];
     static physicsComponents: Array<PhysicsComponent> = [];
 
