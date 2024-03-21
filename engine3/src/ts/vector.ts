@@ -101,6 +101,10 @@ class Vector {
         return a.x * b.x + a.y * b.y;
     }
 
+    static cross(a: Vector, b: Vector): number {
+        return a.x * b.y - a.y * b.x;
+    }
+
     static up(): Vector { return new Vector(0, -1); }
     static right(): Vector { return new Vector(1, 0); }
     static down(): Vector { return new Vector(0, 1); }

@@ -44,4 +44,7 @@ class Rect extends Shape {
     draw() {
         rect(this.gameObject.pos.x - this.size.x / 2, this.gameObject.pos.y - this.size.y / 2, this.size.x, this.size.y);
     }
+    calculateInertia(mass) {
+        return mass * (this.size.x * this.size.x + this.size.y * this.size.y) / 12.0;
+    }
 }

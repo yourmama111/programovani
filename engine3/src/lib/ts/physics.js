@@ -6,11 +6,13 @@ class CollisionManifold {
      * @description Points from rigiB to rigiA
      */
     normal;
+    point;
     depth;
-    constructor(rigiA, rigiB, normal, depth) {
+    constructor(rigiA, rigiB, normal, point, depth) {
         this.rigiA = rigiA;
         this.rigiB = rigiB;
         this.normal = new Vector(normal);
+        this.point = new Vector(point);
         this.depth = depth;
     }
     resolveCollision() {
@@ -30,6 +32,26 @@ class CollisionManifold {
         this.rigiB.vel.add(impulseB);
         this.rigiA.currentCollisions.set(this.rigiB, new Collision(this.rigiB, this.normal, this.depth));
         this.rigiB.currentCollisions.set(this.rigiA, new Collision(this.rigiA, Vector.mult(this.normal, -1), this.depth));
+        // Friction
+        let penetrationToCentroidA = Vector.sub(this.point, this.rigiA.gameObject.pos);
+        let penetrationToCentroidB = Vector.sub(this.point, this.rigiB.gameObject.pos);
+        let velocityInNormalDirection = Vector.mult(this.normal, relativeVelocityAlongNormal);
+        let tangent = Vector.sub(velocityInNormalDirection, relativeVelocity);
+        let minFriction = Math.min(this.rigiA.friction, this.rigiB.friction);
+        if (tangent.x > 0.0001 && tangent.y > 0.0001) {
+            tangent.mult(1 / tangent.mag());
+        }
+        let pToCentroidCrossTangentA = Vector.cross(penetrationToCentroidA, tangent);
+        let pToCentroidCrossTangentB = Vector.cross(penetrationToCentroidB, tangent);
+        let crossSumTangent = pToCentroidCrossTangentA * pToCentroidCrossTangentA * this.rigiA.invInertia +
+            pToCentroidCrossTangentB * pToCentroidCrossTangentB * this.rigiB.invInertia;
+        let frictionalImpulse = -(1 + e) * Vector.dot(relativeVelocity, tangent) * minFriction;
+        frictionalImpulse /= invMassSum + crossSumTangent;
+        if (frictionalImpulse > j)
+            frictionalImpulse = j;
+        let frictionalImpulseVector = Vector.mult(tangent, frictionalImpulse);
+        this.rigiA.vel.sub(Vector.mult(frictionalImpulseVector, this.rigiA.invMass));
+        this.rigiB.vel.add(Vector.mult(frictionalImpulseVector, this.rigiB.invMass));
     }
     positionalCorrection() {
         let correctionPercentage = 0.2;
@@ -59,15 +81,19 @@ class Rigidbody extends Component {
     applyGravity = true;
     mass = 1;
     invMass;
+    inertia = 0;
+    invInertia = 0;
     bounciness = 0;
+    friction = 0.01;
     isKinematic = false;
     shape;
     collisions = new Map();
     currentCollisions = new Map();
-    constructor(mass = 1, bounciness = 0) {
+    constructor(mass = 1, bounciness = 0, friction = 0.01) {
         super();
         this.mass = mass;
         this.bounciness = bounciness;
+        this.friction = friction;
         if (this.mass > 0.0001)
             this.invMass = 1 / this.mass;
         else {
@@ -83,6 +109,11 @@ class Rigidbody extends Component {
             return;
         }
         this.shape = shape;
+        this.inertia = this.shape.calculateInertia(this.mass);
+        if (this.inertia > 0.0001)
+            this.invInertia = 1 / this.inertia;
+        else
+            this.invInertia = 0;
     }
     fixedUpdate(deltaTime) {
         if (this.applyGravity)
@@ -255,7 +286,7 @@ class Physics {
         let hit = Physics.rayVsRect(rigiA.gameObject.pos, Vector.mult(rigiA.vel, deltaTime), pos, size);
         if (!hit || hit.t < 0 || hit.t >= 1)
             return;
-        return new CollisionManifold(rigiA, rigiB, hit.normal, hit.distance);
+        return new CollisionManifold(rigiA, rigiB, hit.normal, hit.point, hit.distance);
     }
     static rectVsRect(rigiA, rigiB) {
         let rectA = rigiA.shape;
@@ -275,21 +306,26 @@ class Physics {
         maxCorner.y = Math.abs(maxCorner.y);
         let depth = Math.min(minCorner.x, minCorner.y, maxCorner.x, maxCorner.y);
         let normal = new Vector();
+        let point = new Vector();
         switch (depth) {
             case minCorner.x:
                 normal.x = -1;
+                point = minB.y > minA.y ? new Vector(minB.x + rectB.size.x, minB.y) : new Vector(maxB);
                 break;
             case minCorner.y:
                 normal.y = -1;
+                point = minB.x > minA.x ? new Vector(minB.x, minB.y + rectB.size.y) : new Vector(maxB);
                 break;
             case maxCorner.x:
                 normal.x = 1;
+                point = maxB.y < maxA.y ? new Vector(minB.x - rectB.size.x, minB.y) : new Vector(minB);
                 break;
             case maxCorner.y:
                 normal.y = 1;
+                point = maxB.x < maxA.x ? new Vector(minB.x, minB.y - rectB.size.y) : new Vector(minB);
                 break;
         }
-        return new CollisionManifold(rigiA, rigiB, normal, depth);
+        return new CollisionManifold(rigiA, rigiB, normal, point, depth);
     }
     // pos: center of the rect
     static rayVsRect(origin, direction, pos, size) {

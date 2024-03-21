@@ -83,6 +83,9 @@ class Vector {
     static dot(a, b) {
         return a.x * b.x + a.y * b.y;
     }
+    static cross(a, b) {
+        return a.x * b.y - a.y * b.x;
+    }
     static up() { return new Vector(0, -1); }
     static right() { return new Vector(1, 0); }
     static down() { return new Vector(0, 1); }
