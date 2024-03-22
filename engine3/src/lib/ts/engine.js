@@ -111,6 +111,15 @@ class GameObject {
         for (const component of this.components)
             component.destroyed = true;
     }
+    static findObjectsOfType(type) {
+        let out = [];
+        for (const object of Engine.objects) {
+            let component = object.getComponent(type);
+            if (component)
+                out.push(component);
+        }
+        return out;
+    }
 }
 class Component {
     gameObject;

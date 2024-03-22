@@ -140,6 +140,15 @@ class GameObject {
         for (const component of this.components)
             component.destroyed = true;
     }
+
+    static findObjectsOfType<T extends Component>(type: { new(): T }): Array<T> {
+        let out: Array<T> = [];
+        for (const object of Engine.objects) {
+            let component = object.getComponent(type);
+            if (component) out.push(component);
+        }
+        return out;
+    }
 }
 
 abstract class Component {
