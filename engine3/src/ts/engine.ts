@@ -59,7 +59,12 @@ class Engine {
         
         extraFixedTime += deltaTime;
         while (extraFixedTime >= fixedDeltaTime) {
-            Physics.update(fixedDeltaTime);
+            Physics.update();
+
+            for (const object of Engine.objects) {
+                object.fixedUpdate();
+            }
+
             extraFixedTime -= fixedDeltaTime;
         }
 
@@ -105,6 +110,12 @@ class GameObject {
                 component.destroy();
             } else
                 component.update();
+        }
+    }
+
+    fixedUpdate() {
+        for (const component of this.components) {
+            component.fixedUpdate();
         }
     }
 
@@ -162,6 +173,7 @@ abstract class Component {
 
     start() {}
     update() {}
+    fixedUpdate() {}
     destroy() {}
     onCollisionEnter(col: Collision) {}
     onCollisionExit(col: Collision) {}

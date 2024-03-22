@@ -43,7 +43,10 @@ class Engine {
         Engine.lastUpdate = now;
         extraFixedTime += deltaTime;
         while (extraFixedTime >= fixedDeltaTime) {
-            Physics.update(fixedDeltaTime);
+            Physics.update();
+            for (const object of Engine.objects) {
+                object.fixedUpdate();
+            }
             extraFixedTime -= fixedDeltaTime;
         }
         for (let i = 0; i < Engine.objects.length; i++) {
@@ -81,6 +84,11 @@ class GameObject {
             }
             else
                 component.update();
+        }
+    }
+    fixedUpdate() {
+        for (const component of this.components) {
+            component.fixedUpdate();
         }
     }
     onCollisionEnter(col) {
@@ -128,6 +136,7 @@ class Component {
     getComponent(type) { return this.gameObject.getComponent(type); }
     start() { }
     update() { }
+    fixedUpdate() { }
     destroy() { }
     onCollisionEnter(col) { }
     onCollisionExit(col) { }

@@ -30,8 +30,8 @@ class CollisionManifold {
         let impulseB = Vector.mult(impulse, this.rigiB.invMass);
         this.rigiA.vel.add(impulseA);
         this.rigiB.vel.add(impulseB);
-        this.rigiA.currentCollisions.set(this.rigiB, new Collision(this.rigiB, this.normal, this.depth));
-        this.rigiB.currentCollisions.set(this.rigiA, new Collision(this.rigiA, Vector.mult(this.normal, -1), this.depth));
+        this.rigiA.currentCollisions.set(this.rigiB, new Collision(this.rigiB, Vector.mult(this.normal, -1), this.depth));
+        this.rigiB.currentCollisions.set(this.rigiA, new Collision(this.rigiA, Vector.mult(this.normal, 1), this.depth));
         // Friction
         let penetrationToCentroidA = Vector.sub(this.point, this.rigiA.gameObject.pos);
         let penetrationToCentroidB = Vector.sub(this.point, this.rigiB.gameObject.pos);
@@ -84,7 +84,7 @@ class Rigidbody extends Component {
     inertia = 0;
     invInertia = 0;
     bounciness = 0;
-    friction = 0.01;
+    friction = 0.1;
     isKinematic = false;
     shape;
     collisions = new Map();
@@ -115,12 +115,12 @@ class Rigidbody extends Component {
         else
             this.invInertia = 0;
     }
-    fixedUpdate(deltaTime) {
+    physicsUpdate() {
         if (this.applyGravity)
             this.applyForce(Physics.gravity);
         let acc = Vector.mult(this.forceAccumulator, this.invMass);
-        this.vel.add(Vector.mult(acc, deltaTime));
-        this.gameObject.pos.add(Vector.mult(this.vel, deltaTime));
+        this.vel.add(Vector.mult(acc, fixedDeltaTime));
+        this.gameObject.pos.add(Vector.mult(this.vel, fixedDeltaTime));
         this.vel.mult(0.9999);
         this.forceAccumulator.mult(0);
         this.processCollisions();
@@ -249,7 +249,7 @@ class Physics {
     static gravity = createVector(0, 1800);
     static bodies = [];
     static physicsComponents = [];
-    static update(deltaTime) {
+    static update() {
         for (const rigiA of this.bodies) {
             for (const rigiB of this.bodies) {
                 if (rigiA == rigiB)
@@ -262,7 +262,7 @@ class Physics {
             }
         }
         for (const rb of this.bodies) {
-            rb.fixedUpdate(deltaTime);
+            rb.physicsUpdate();
         }
     }
     static checkCollision(rigiA, rigiB) {

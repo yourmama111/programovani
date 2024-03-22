@@ -49,8 +49,8 @@ class CollisionManifold {
         this.rigiA.vel.add(impulseA);
         this.rigiB.vel.add(impulseB);
 
-        this.rigiA.currentCollisions.set(this.rigiB, new Collision(this.rigiB, this.normal, this.depth));
-        this.rigiB.currentCollisions.set(this.rigiA, new Collision(this.rigiA, Vector.mult(this.normal, -1), this.depth));
+        this.rigiA.currentCollisions.set(this.rigiB, new Collision(this.rigiB, Vector.mult(this.normal, -1), this.depth));
+        this.rigiB.currentCollisions.set(this.rigiA, new Collision(this.rigiA, Vector.mult(this.normal,  1), this.depth));
 
         // Friction
         let penetrationToCentroidA = Vector.sub(this.point, this.rigiA.gameObject.pos);
@@ -112,7 +112,7 @@ class Rigidbody extends Component {
     inertia: number = 0;
     invInertia: number = 0;
     bounciness: number = 0;
-    friction: number = 0.01;
+    friction: number = 0.1;
 
     readonly isKinematic: boolean = false;
     shape!: Shape;
@@ -120,7 +120,7 @@ class Rigidbody extends Component {
     private readonly collisions: Map<Rigidbody, Collision> = new Map();
     readonly currentCollisions: Map<Rigidbody, Collision> = new Map();
 
-    constructor(mass: number = 1, bounciness: number = 0, friction = 0.01) {
+    constructor(mass: number = 1, bounciness: number = 0, friction: number = 0.1) {
         super();
         this.mass = mass;
         this.bounciness = bounciness;
@@ -148,12 +148,12 @@ class Rigidbody extends Component {
         else this.invInertia = 0;
     }
 
-    fixedUpdate(deltaTime: number) {
+    physicsUpdate() {
         if (this.applyGravity) this.applyForce(Physics.gravity);
 
         let acc = Vector.mult(this.forceAccumulator, this.invMass);
-        this.vel.add(Vector.mult(acc, deltaTime));
-        this.gameObject.pos.add(Vector.mult(this.vel, deltaTime));
+        this.vel.add(Vector.mult(acc, fixedDeltaTime));
+        this.gameObject.pos.add(Vector.mult(this.vel, fixedDeltaTime));
 
         this.vel.mult(0.9999);
         this.forceAccumulator.mult(0);
@@ -319,7 +319,7 @@ class Physics {
     static readonly bodies: Array<Rigidbody> = [];
     static physicsComponents: Array<PhysicsComponent> = [];
 
-    static update(deltaTime: number) {
+    static update() {
 
         for (const rigiA of this.bodies) {
             for (const rigiB of this.bodies) {
@@ -333,7 +333,7 @@ class Physics {
         }
 
         for (const rb of this.bodies) {
-            rb.fixedUpdate(deltaTime);
+            rb.physicsUpdate();
         }
     }
 
