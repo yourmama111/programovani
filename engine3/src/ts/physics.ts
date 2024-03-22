@@ -344,6 +344,15 @@ class Physics {
         if (rigiA.shape instanceof Rect && rigiB.shape instanceof Rect) {
             return this.rectVsRect(rigiA, rigiB);
         }
+        else if (rigiA.shape instanceof Circle && rigiB.shape instanceof Rect) {
+            return this.circleVsRect(rigiA, rigiB);
+        }
+        else if (rigiA.shape instanceof Rect && rigiB.shape instanceof Circle) {
+
+        }
+        else if (rigiA.shape instanceof Circle && rigiB.shape instanceof Circle) {
+            return this.circleVsCircle(rigiA, rigiB);
+        }
         else {
             console.warn(`Collision of invalid shapes: ${rigiA.shape}, ${rigiB.shape}`);
         }
@@ -408,6 +417,44 @@ class Physics {
         }
 
         return new CollisionManifold(rigiA, rigiB, normal, point, depth);
+    }
+
+    private static circleVsRect(rigiA: Rigidbody, rigiB: Rigidbody): CollisionManifold | undefined {
+
+        let circleA = <Circle>rigiA.shape;
+        let rectB = <Rect>rigiB.shape;
+
+        let circlePos = rigiA.gameObject.pos;
+        let rectMin = Vector.sub(rigiB.gameObject.pos, Vector.mult(rectB.size, 0.5));
+        let rectMax = Vector.add(rigiB.gameObject.pos, Vector.mult(rectB.size, 0.5));
+
+        let closest = new Vector(clamp(circlePos.x, rectMin.x, rectMax.x), clamp(circlePos.y, rectMin.y, rectMax.y));
+
+        let dir = Vector.sub(closest, circlePos);
+        let dist = dir.mag();
+        let depth = dist - circleA.radius;
+        if (depth >= 0) return;
+
+        let normal = dir.mult(1/dist);
+        let point = Vector.add(circlePos, Vector.mult(normal, circleA.radius));
+
+        return new CollisionManifold(rigiA, rigiB, normal, point, -depth);
+    }
+
+    private static circleVsCircle(rigiA: Rigidbody, rigiB: Rigidbody): CollisionManifold | undefined {
+
+        let circleA = <Circle>rigiA.shape;
+        let circleB = <Circle>rigiB.shape;
+
+        let dir = Vector.sub(rigiB.gameObject.pos, rigiA.gameObject.pos);
+        let dist = dir.mag();
+        let depth = dist - (circleA.radius + circleB.radius);
+        if (depth >= 0) return;
+
+        let normal = Vector.mult(dir, 1/dist);
+        let point = Vector.add(rigiA.gameObject.pos, Vector.mult(normal, circleA.radius));
+
+        return new CollisionManifold(rigiA, rigiB, normal, point, -depth);
     }
 
     // pos: center of the rect

@@ -52,3 +52,20 @@ class Rect extends Shape {
         return mass * (this.size.x * this.size.x + this.size.y * this.size.y) / 12.0;
     }
 }
+
+class Circle extends Shape {
+    radius: number;
+
+    constructor(radius: number) {
+        super();
+        this.radius = radius;
+    }
+
+    draw(): void {
+        circle(this.gameObject.pos.x, this.gameObject.pos.y, this.radius);
+    }
+
+    calculateInertia(mass: number): number {
+        return 0.5 * mass * this.radius * this.radius;
+    }
+}

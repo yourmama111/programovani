@@ -105,6 +105,10 @@ class Vector {
         return a.x * b.y - a.y * b.x;
     }
 
+    static dist(a: Vector, b: Vector): number {
+        return this.sub(b, a).mag();
+    }
+
     static up(): Vector { return new Vector(0, -1); }
     static right(): Vector { return new Vector(1, 0); }
     static down(): Vector { return new Vector(0, 1); }
