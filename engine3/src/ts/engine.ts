@@ -115,7 +115,8 @@ class GameObject {
 
     fixedUpdate() {
         for (const component of this.components) {
-            component.fixedUpdate();
+            if (component.enabled)
+                component.fixedUpdate();
         }
     }
 
