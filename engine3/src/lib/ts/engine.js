@@ -133,7 +133,7 @@ class GameObject {
 class Component {
     gameObject;
     destroyed = false;
-    enabled = false;
+    enabled = true;
     constructor() { }
     getComponent(type) { return this.gameObject.getComponent(type); }
     start() { }

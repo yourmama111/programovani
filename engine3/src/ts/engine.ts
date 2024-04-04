@@ -167,7 +167,7 @@ abstract class Component {
 
     gameObject!: GameObject;
     destroyed = false;
-    enabled: boolean = false;
+    enabled: boolean = true;
 
     constructor() {}
 
