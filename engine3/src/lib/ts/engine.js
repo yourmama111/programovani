@@ -82,7 +82,7 @@ class GameObject {
                 this.components.splice(i--, 1);
                 component.destroy();
             }
-            else
+            else if (component.enabled)
                 component.update();
         }
     }
@@ -132,6 +132,7 @@ class GameObject {
 class Component {
     gameObject;
     destroyed = false;
+    enabled = false;
     constructor() { }
     getComponent(type) { return this.gameObject.getComponent(type); }
     start() { }

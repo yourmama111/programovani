@@ -108,7 +108,7 @@ class GameObject {
             if (component.destroyed) {
                 this.components.splice(i--, 1);
                 component.destroy();
-            } else
+            } else if (component.enabled)
                 component.update();
         }
     }
@@ -166,6 +166,7 @@ abstract class Component {
 
     gameObject!: GameObject;
     destroyed = false;
+    enabled: boolean = false;
 
     constructor() {}
 
