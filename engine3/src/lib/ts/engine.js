@@ -43,7 +43,10 @@ class Engine {
         Engine.lastUpdate = now;
         extraFixedTime += deltaTime;
         while (extraFixedTime >= fixedDeltaTime) {
-            Physics.update(fixedDeltaTime);
+            Physics.update();
+            for (const object of Engine.objects) {
+                object.fixedUpdate();
+            }
             extraFixedTime -= fixedDeltaTime;
         }
         for (let i = 0; i < Engine.objects.length; i++) {
@@ -79,8 +82,24 @@ class GameObject {
                 this.components.splice(i--, 1);
                 component.destroy();
             }
-            else
+            else if (component.enabled)
                 component.update();
+        }
+    }
+    fixedUpdate() {
+        for (const component of this.components) {
+            if (component.enabled)
+                component.fixedUpdate();
+        }
+    }
+    onCollisionEnter(col) {
+        for (const component of this.components) {
+            component.onCollisionEnter(col);
+        }
+    }
+    onCollisionExit(col) {
+        for (const component of this.components) {
+            component.onCollisionExit(col);
         }
     }
     addComponent(component) {
@@ -101,13 +120,26 @@ class GameObject {
         for (const component of this.components)
             component.destroyed = true;
     }
+    static findObjectsOfType(type) {
+        let out = [];
+        for (const object of Engine.objects) {
+            let component = object.getComponent(type);
+            if (component)
+                out.push(component);
+        }
+        return out;
+    }
 }
 class Component {
     gameObject;
     destroyed = false;
+    enabled = true;
     constructor() { }
     getComponent(type) { return this.gameObject.getComponent(type); }
     start() { }
     update() { }
+    fixedUpdate() { }
     destroy() { }
+    onCollisionEnter(col) { }
+    onCollisionExit(col) { }
 }
