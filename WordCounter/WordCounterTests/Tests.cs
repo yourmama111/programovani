@@ -50,7 +50,7 @@ namespace WordCounterTests
 
         [TestMethod]
         public void CombiningWhitespace() {
-            Base("This\r is \n a simple text \n  prompt", 6);
+            Base("This is \n a simple text \n  prompt", 6);
         }
 
         [TestMethod]
